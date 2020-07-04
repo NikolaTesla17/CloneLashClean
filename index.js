@@ -369,5 +369,6 @@ if(excpectedVotes == votes){
 
 
 votes = 0;
+refreshQuest();
 }
 }
