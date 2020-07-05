@@ -129,7 +129,7 @@ input{
 button{
   font: 6vmax roboto;
   background-color: #006064;
-  border-radius: 8px;
+  border-radius: 1vh;
   border: none;
   color: white;
   outline:none;
