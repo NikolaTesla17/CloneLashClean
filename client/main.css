@@ -15,7 +15,6 @@ html, body{
 
 /* CHATS */
 #chats{
-  /* width: calc(100% - 180px); */
   height: calc(100% - 20vh);
   overflow: auto;
   word-wrap: break-word;
@@ -24,21 +23,19 @@ html, body{
   font-family: "Open Sans";
   font-size: 4vmax;
 }
-/* @media (max-width: 444px){
-  #chats{
-    width: 250px;
-  }
-} */
 #main-container{
   margin: auto;
   background-color: #cfd8dc;
   height: 100%;
   width: auto;
-  /* width: 1000px; */
-  border-radius: 2px;
+  border-radius: 1vh;
   box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.2), 0 1px 5px 0 rgba(0,0,0,.12);
   overflow: hidden;
 }
+#main-container.dissapear{
+  visibility: hidden;
+}
+
 #main-content{
   position: relative;
   width: 100%;
@@ -74,6 +71,7 @@ html, body{
 }
 
 #prompt{
+  border-radius: 2vh;
   width: 80vw;
   height: 65vmin;
   position: fixed;
@@ -91,7 +89,40 @@ html, body{
     padding-top: 6vh;
   box-sizing: border-box;
   
+  
 }
+
+
+#afk{
+  border-radius: 2vh;
+  width: 80vw;
+  height: 55vmin;
+  position: fixed;
+  left: calc((100% - 80vw)/2);  
+  top: calc((100% - 65vmin)/2);
+  z-index: 10;
+  background-color: white;
+  box-shadow: 0 2px 1px rgba(255, 255, 255, 0.19), 
+              0 4px 2px rgba(255, 255, 255, 0.19), 
+              0 8px 4px rgba(255, 255, 255, 0.19), 
+              0 16px 8px rgba(255, 255, 255, 0.19),
+              0 32px 16px rgba(255, 255, 255, 0.19);
+  font-size: 10vmin;
+  text-align: center;
+    padding-top: 3vh;
+    padding-bottom: 3vh;
+  opacity: 0;
+  transition: opacity 1s; 
+  visibility: hidden;
+}
+#inactive{
+  color: red;
+}
+#afk.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
 #name{
 width: 50vw;
 font-size: 8vw;
@@ -140,20 +171,16 @@ button{
   margin-bottom: 10px;
 }
 .controlButton{
-        /* display: block; */
   font: 5.2vmax roboto;
   float: left;
-    /* float: right; */
 }
 .controlButton2{
-      /* display: block; */
   font: 5.2vmax roboto;
     float: right;
 margin-right: 4vw;
 }
 
 #message{
-  /* width: calc(100% - 18px); */
   width: 92vw;
 }
 
@@ -174,7 +201,6 @@ margin-right: 4vw;
         margin-right: 1vw;
 }
 #message{
-  /* width: calc(100% - 18px); */
   width: 98vw;
 }
 }
@@ -183,11 +209,6 @@ input:focus{
   outline: none;
   border-bottom: 1px solid #00bcd4;
 }
-/* @media (max-width: 580px){
-  #message{
-    width: calc(100% - 100px);
-  }
-} */
 
 .vote{
     font: 3vmax roboto;
@@ -208,7 +229,7 @@ button:hover{
 
 
 }
-/* Widgets */
+
 .tooltip{
   position: fixed;
   background-color: grey;
@@ -256,7 +277,6 @@ button:hover{
 .time{
   color: #90a4ae;
   font: 5vmax roboto;
-  /* line-height: 25px; */
   float: right;
   height: 100%;
   margin-left: 2vw;
@@ -291,6 +311,7 @@ button:hover{
 
 
 
+
 #question {
   opacity: 1;
   transition: opacity 0.6s; 
@@ -298,7 +319,6 @@ button:hover{
 #question.fade {
   opacity: 0;
 }
-
 
 #winner {
   width: 100%;
@@ -367,7 +387,6 @@ button:hover{
 .background {
   width: 50%;
   height: 90%;
-  /* min-height: 700px; */
   background: linear-gradient(to bottom right, #0000FF, #ADD8E6);
 }
 
