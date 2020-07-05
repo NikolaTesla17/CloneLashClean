@@ -223,7 +223,14 @@ function newQuestion(){
 
 }
 
+const sleep = (milliseconds) => {
+  return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
+
 function changeQuestion(){
+      var question = document.getElementById('question');
+      question.classList.toggle('fade');
+sleep(600).then(() => {
       $('#question').children("span").remove();
       $('#question').append("<span>" + newQuestFinal + "</span>");
       turnTaken = false;
@@ -233,48 +240,31 @@ function changeQuestion(){
 while(div.firstChild){
     div.removeChild(div.firstChild);
 }
-
+      question.classList.toggle('fade');
+})
 }
 
-// const newQuestion = async () => {
-//   const newQuestFinal2 = await axios(users)
-
-
-//   $('#question').children("span").remove();
-
-//   $('#question').append("<span>" + newQuestFinal2 + "</span>");
-//   //return result
-// }
 function showWin(winner){
   $('#message').val('');
   
-
-
   winner = "🎉congrats" + " " + winner + "🎉";//" + "🐢
-  //winner = winner;
-
-  // Display winner
   $("#world").addClass("open");
   $("#winner").addClass("open");
   $("#close").addClass("open");
   $("#winner").text(winner);
-  //resizeWindow();
-
-  // $("#runnerUp").addClass("open");
-  // $("#runnerUp").addClass("close");
-  // $("#runnerUp").text(runnerUp);
-
-  // $("#world2").addClass("open");
-  // $("#names").addClass("open");
-  // $("#close2").addClass("open");
-  // $("#names").text(winner);
-  // $("#names").text(nameArray[1]);
+   var question = document.getElementById('question');
+    question.classList.toggle('fade');
   
 $("#close").click(function() {
   $("#world").removeClass("open");
   $("#winner").removeClass("open");
   // $("#runnerUp").removeClass("open");
   $("#close").removeClass("open");
+
+  sleep(200).then(() => {
+      question.classList.toggle('fade');
+  })
+
 
 });
 
