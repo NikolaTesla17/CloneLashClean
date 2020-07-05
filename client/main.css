@@ -361,7 +361,7 @@ button:hover{
 #world.open {
   visibility: initial; 
   opacity: 1;
-  transition: opacity 1.5s ease, visibility 0.5s ease;
+  transition: opacity .5s ease, visibility 0.5s ease;
 }
 
 .background {
