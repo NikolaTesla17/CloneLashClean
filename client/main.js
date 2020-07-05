@@ -73,7 +73,7 @@ socket.on('chats', data => {
 	}
 
 	if (data.length == 0) {
-		$('#chats').html('<div style="text-align: center" class="red">Loading Questions.</div>');
+		$('#chats').html('<div style="text-align: center" class="red">Loading Question.</div>');
 	}
 
   //console.log("entering voting")
