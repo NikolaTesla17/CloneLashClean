@@ -245,6 +245,8 @@ while(div.firstChild){
 }
 
 function showWin(winner){
+  var question = document.getElementById('question');
+
   $('#message').val('');
   
   winner = "🎉congrats" + " " + winner + "🎉";//" + "🐢
@@ -252,8 +254,7 @@ function showWin(winner){
   $("#winner").addClass("open");
   $("#close").addClass("open");
   $("#winner").text(winner);
-   var question = document.getElementById('question');
-    question.classList.add('fade');
+
   
 $("#close").click(function() {
   $("#world").removeClass("open");
@@ -261,8 +262,12 @@ $("#close").click(function() {
   // $("#runnerUp").removeClass("open");
   $("#close").removeClass("open");
 
-  sleep(200).then(() => {
-      question.classList.remove('fade');
+    //question.classList.add('fade');
+  question.style.visibility = "hidden";
+      question.classList.add('fade');
+  sleep(400).then(() => {
+        question.style.visibility = "visible";
+             question.classList.remove('fade');
   })
 
 
