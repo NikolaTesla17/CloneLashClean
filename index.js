@@ -3,7 +3,8 @@ var names = ['default val'];
 var votes = 0;
 var excpected = [];
 var have = [];
-// var rooms = ['default.txt'];
+
+const start = Date.now();
 
 var express = require('express');
 var app = express();
@@ -21,27 +22,7 @@ var io = require('socket.io')(serv, {});
 var fs = require('fs');
 var d = new Date();
 
-
-    rmDir = function(dirPath, removeSelf) {
-      if (removeSelf === undefined)
-        removeSelf = true;
-      try { var files = fs.readdirSync(dirPath); }
-      catch(e) { return; }
-      if (files.length > 0)
-        for (var i = 0; i < files.length; i++) {
-          var filePath = dirPath + '/' + files[i];
-          if (fs.statSync(filePath).isFile())
-            fs.unlinkSync(filePath);
-          else
-            rmDir(filePath);
-        }
-      if (removeSelf)
-        fs.rmdirSync(dirPath);
-    };
-rmDir('rooms', false)
-
 const readline = require('readline');
-//const fs = require('fs');
 
 var file = 'prompts.txt';
 var linesCount = 0;
@@ -51,20 +32,16 @@ var rl = readline.createInterface({
     terminal: false
 });
 rl.on('line', function (line) {
-    linesCount++; // on each linebreak, add +1 to 'linesCount'
+    linesCount++;
 });
 rl.on('close', function () {
 });
 
 io.sockets.on('connection', socket => {
-  //emitChats();
   if(!chats.length)
-  //  getChats();
-	//emitChats();
 	socket.color = getRandomColor();
 
   socket.on('question', question => {
-  //getQuestion();
   refreshQuest();
   });
 
@@ -77,54 +54,13 @@ io.sockets.on('connection', socket => {
 		} else socket.name = name;
 
 currentPlayers();
+socket.lastResponse = Date.now();
 	});
 
-// 	socket.on('game', game => {
-//     //gameDoc = "/tmp/" + game + ".txt";
-//     refreshQuest();
 
-//     if(game=='default'){
-//     gameDoc = 'default.txt';
-//     } else {
-//     gameDoc = "rooms/" + game + ".txt";
-//     }
-    
   socket.on('players', players => {
-  //getQuestion();
-  console.log(have);
 currentPlayers()
   });
-
-
-
-
-//   //peopleInRoom++;
-// //     const testFolder = 'rooms';
-// //     //const fs = require('fs');
-
-// // fs.readdir(testFolder, (err, files) => {
-// //   files.forEach(file => {
-// //     console.log(file);
-// //     rooms.push(file)
-// //   });
-// //   console.log(rooms);
-// // });
-
-
-
-// // var fs = require('fs');
-
-// // fs.writeFile(gameDoc, 'Hello All', function (err) {
-// //   if (err) throw err;
-// //   console.log('Saved!');
-// // });
-
-// 		saveChats();
-//     getChats();
-// 		emitChats();
-// 		// emitWho();
-// 		saveChats();
-// 		});
 
 	socket.on('message', message => {
 	  if(message.length > 100) return;
@@ -139,16 +75,16 @@ currentPlayers()
         points: 0,
         username: socket.name
 		});
+
 		saveChats();
     answerComplete();
+    socket.lastResponse = Date.now();
 	});
   socket.on('vote', id => {
     for(var i in chats){
       if(chats[i].id == id){
         chats[i].points++;
         votes++;
-        //console.log(chats[i].points);
-        // chats.splice(i, 1);
         break;
       }
     }
@@ -156,48 +92,21 @@ currentPlayers()
     emitChats();
   });
 	socket.on('disconnect', () => {
-	  // refreshTime();
-		// if (socketList[socket.id]) {
-		// 	chats.push({
-		// 	  message:
-		// 		'<span class="name" style="color:' +
-		// 			socket.color +
-		// 			'">' +
-		// 			socket.name +
-		// 			'</span> <span class="red"> left.</span>',
-		// 		time: d.getTime()
-		// 	});
-			// emitChats();
 			delete socketList[socket.id];
-		//}
 		saveChats();
-		// emitWho();
 	});
 });
-// setInterval(() => {
-// //   // refreshTime();
-// //   // emitChats();
-// }, 500);
-// function refreshTime(){
-//   d = new Date();
-//   io.sockets.emit('time', d.getTime());
-// }
-// function emitWho() {
-// 	for (var j in socketList) {
-// 		var pack = [];
-// 		for (var i in socketList) {
-// 			if (j == i) {
-// 				pack.push({
-// 					name: socketList[i].name + ' (You)',
-// 					color: socketList[i].color
-// 				});
-// 			} else {
-// 				pack.push({ name: socketList[i].name, color: socketList[i].color });
-// 			}
-// 		}
-// 		socketList[j].emit('who', pack);
-// 	}
-// }
+setInterval(() => {
+   for(var i in socketList){
+       const millis = Date.now() - socketList[i].lastResponse;
+       if(millis > 90000){
+         socketList[i].emit('afk', );
+        delete socketList[i];
+      	saveChats();
+       }
+   }
+}, 9000);
+
 function emitChats(){
  for(var i in socketList){
     var pack = chats.map(c => {
@@ -249,8 +158,6 @@ async function getQuestion() {
   filePath = 'prompts.txt',
   rowIndex = getRandomLine();
 const finalQuestion = await nthline(rowIndex, filePath)
-//var modifiedQuestion = finalQuestion.split("~");
-//var finished = (modifiedQuestion[0] + getRandomName() + modifiedQuestion[1]);
     chats.splice(0, chats.length);
     emitChats();
 return(finalQuestion);
@@ -283,12 +190,10 @@ function answerComplete(){
 
   if(have.length == excpected.length){
     emitChats();
-    //refreshQuest();
   } else {
     dontHave()
 
   }
-  //voteComplete()
 }
 
 function dontHave(){
@@ -297,7 +202,6 @@ function dontHave(){
   for(var z in excpected) {
 
     if(!(have.includes(excpected[z]))){
-      //console.log("dont have" + excpected[z]);
       pack+=(" " + excpected[z] );
     }
 
@@ -313,9 +217,7 @@ function currentPlayers(){
   updateArrays();
     pack = "";
   for(var z in excpected) {
-      //console.log("list" + excpected)
       pack+=(" " + excpected[z]);
-      console.log(pack)
     }
 for(var i in socketList){
     socketList[i].emit('lobby', pack);
@@ -344,7 +246,6 @@ var excpectedVotes = 0;
 if(excpectedVotes == votes){
   pointsArray = [];
   justPoints = [];
-  console.log("all votes in")
   for (var j in chats) {
     pointsArray.push({
     score: chats[j].points,
@@ -354,13 +255,10 @@ if(excpectedVotes == votes){
   for (var k in pointsArray) {
   justPoints.push(pointsArray[k].score);
 }
-  //console.log(justPoints);
   var roundWinnerPoints = Math.max(...justPoints);
-  //console.log(roundWinnerPoints);
     for (var k in pointsArray) {
       if(pointsArray[k].score == roundWinnerPoints){
         var roundWinner = pointsArray[k].name;
-          //console.log(roundWinner);
           io.sockets.emit('winner', roundWinner);
         break;
       }
