@@ -2,7 +2,6 @@ $('#main-container').hide();
 $('#main-container').fadeOut();
 $('#controls').hide();
 $('#controls').fadeOut();
-// $('#reply-tooltip').hide();
 $('#copy-tooltip').hide();
 $('#name').focus();
 
@@ -29,7 +28,6 @@ function rename() {
 }
 var socket = io();
 socket.on('chats', data => {
-  //console.log(data);
  
 	var reachedEnd = false;
 	if (
@@ -45,27 +43,12 @@ socket.on('chats', data => {
 	var html = "";
 	for(var d of data){
 	  
-	  var timeDiff = time - d.time;
-	  var timeStr = "";
-	  var secDiff = Math.floor(timeDiff / 1000);
-	  var minDiff = Math.floor(timeDiff / (60 * 1000));
-	  var hourDiff = Math.floor(timeDiff / (60 * 60 * 1000));
-	  var dayDiff = Math.floor(timeDiff / (24 * 60 * 60 * 1000));
-	  if(minDiff >= 60) minDiff = minDiff % 60;
-	  if(hourDiff >= 24) hourDiff = hourDiff % 24;
-	  if(secDiff >= 60) secDiff = secDiff % 60;
-	  // timeStr = (dayDiff? dayDiff + "d ": "") + (hourDiff? hourDiff + "h ": "") + (minDiff? minDiff + "m ": "") + (!minDiff? secDiff + "s ": "") + "ago";
     timeStr = d.points;
-    //console.log(d.id);
 	  var htmlToAdd = '<div class="message">' + d.message + ' <span class="time">'+timeStr+' votes</span>' + (d.id? '<button class="vote" id="'+d.id+'">Vote</button>': "") + '</div>';
 
-//'<div class="message">' + d.message + ' <span class="time">'+timeStr+'</span>' + (d.id? '<button class="vote" id="'+d.id+'">Vote</button>': "") + '</div>';
-
     html += htmlToAdd;
-    //console.log("adding" + htmlToAdd);
 	}
   $('#chats').html(html);
-  //$('.delete').hide();
 	if (reachedEnd){
 		$('#chats').scrollTop(
 			$('#chats')[0].scrollHeight - $('#chats')[0].clientHeight
@@ -76,7 +59,6 @@ socket.on('chats', data => {
 		$('#chats').html('<div style="text-align: center" class="red">Loading Question.</div>');
 	}
 
-  //console.log("entering voting")
 
 });
 
@@ -96,20 +78,20 @@ $('#chats').html('<div style="text-align: center" class="red">Current players: '
 socket.on('quest', data => {
   newQuestFinal = data;
   changeQuestion();
-  //console.log("recived" + newQuestFinal);
+});
+socket.on('afk', data => {
+var afk = document.getElementById('afk');
+afk.classList.add('visible')
+var mainContainer = document.getElementById('main-container'); mainContainer.classList.add('dissapear')
+var question = document.getElementById('question'); 
+question.classList.add('fade')
 });
 socket.on('winner', data => {
 showWin(data);
-  //console.log("recived" + newQuestFinal);
 });
-// socket.on('nextRound', data => {
-
-//   //console.log("recived" + newQuestFinal);
-// });
 socket.on('clear', data => {
   var whatever = data;
   changeQuestion();
-  //console.log("recived" + newQuestFinal);
 });
 socket.on('time', data => {
   time = data;
@@ -124,7 +106,6 @@ function reply(name) {
 	}
 }
 function send() {
-  //console.log(turnTaken);
   if(!turnTaken){
 	var message = $('#message').val();
 	if (!isEmpty(message)) {
@@ -155,14 +136,11 @@ $(document).on('click', '.message-content', function(e) {
   $temp.remove();
 });
 $(document).on('click', '.vote', function(e) {
-  //console.log("hey" + $(this).attr('id'));
   var idForChange = $(this).attr('id');
   if(!voted){
   socket.emit('vote', $(this).attr('id'));
   voted = true;
   }else{
-    //alert("You can only vote once");
-    //$(idForChange).val("Wait you pig");
     document.getElementById(idForChange).innerHTML = "You Can Only Vote Once";
   }
 });
@@ -191,12 +169,7 @@ $(document).on('mouseleave', '.message-content', function() {
 	$('#copy-tooltip').fadeOut(0);
 	
 });
-// $(document).on('mouseover', '.message', function(){
-//   $(this).find('.delete').show();
-// });
-// $(document).on('mouseleave', '.message', function(){
-//   $(this).find('.delete').hide();
-// });
+
 $('#message').keypress(e => {
 	var code = e.keyCode || e.which;
 	if (code == 13) {
@@ -210,14 +183,8 @@ $('#name').keypress(e => {
 	}
 });
 
-// socket.on('quest', data => {
-//   newQuestFinal = data;
-//   console.log("new quest" + newQuestFinal);
-// })
-
 
 function newQuestion(){
- //await sleep(10);
  		  socket.emit('question', );
          $('#message').val('');
 
@@ -259,10 +226,8 @@ function showWin(winner){
 $("#close").click(function() {
   $("#world").removeClass("open");
   $("#winner").removeClass("open");
-  // $("#runnerUp").removeClass("open");
   $("#close").removeClass("open");
 
-    //question.classList.add('fade');
   question.style.visibility = "hidden";
       question.classList.add('fade');
   sleep(400).then(() => {
@@ -291,7 +256,6 @@ $("#close").click(function() {
 
   window.h = 0;
   
-    //window.addEventListener('resize', resizeWindow, false);
     
 
   resizeWindow = function() {
