@@ -1,44 +1,39 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"> -->
-<!-- <meta name="viewport" content="user-scalable=NO, width=device-width, initial-scale=1.0"/> -->
 <meta name="viewport" content="width=device-width, height=device-height,  initial-scale=1.0, user-scalable=no;user-scalable=0;"/>
 
 
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,900" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700" rel="stylesheet">
     <link rel="stylesheet" href="main.css"/>
-    <title>CloneLash</title>
+    <title>CloneLash Clean</title>
     <link rel="icon" type="image/png" href="favicon.png"/>
   </head>
   <body>
   <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
-  <!-- <script  src="./confeti.js"></script> -->
 
  <div class="overlay">
   <canvas id="world"></canvas>
-  <!-- <canvas id="world2"></canvas> -->
   <h1 id="winner"></h1>
-  <!-- <p id="names"></p> -->
   <svg id="close" aria-hidden="true" data-prefix="far" data-icon="times" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" class="svg-inline--fa fa-times fa-w-10 fa-3x"><path fill="white" d="M207.6 256l107.72-107.72c6.23-6.23 6.23-16.34 0-22.58l-25.03-25.03c-6.23-6.23-16.34-6.23-22.58 0L160 208.4 52.28 100.68c-6.23-6.23-16.34-6.23-22.58 0L4.68 125.7c-6.23 6.23-6.23 16.34 0 22.58L112.4 256 4.68 363.72c-6.23 6.23-6.23 16.34 0 22.58l25.03 25.03c6.23 6.23 16.34 6.23 22.58 0L160 303.6l107.72 107.72c6.23 6.23 16.34 6.23 22.58 0l25.03-25.03c6.23-6.23 6.23-16.34 0-22.58L207.6 256z" class=""></path></svg>
 </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <div id="prompt">
-
-      <!-- <div id="game-info">
-        Game Name:<br/>
-        <input id="game"/>
-      </div> -->
-
       <div id="name-info">
         Your Name:<br/>
         <input id="name" autocomplete="off" style="margin-bottom: 12px;"/>
       </div>
       <button onclick="rename()">OK</button>
     </div>
+
+    <div id="afk">
+      <div id="inactive">You have been kicked for inactivity<br/></div>
+      <button onClick="window.location.reload();">Rejoin</button>
+    </div>
+
     <div id="main-container">
       <div id="main-label" id="questionBox">
         <h1 class="label" id="question">
@@ -46,7 +41,6 @@
           </h1>
       </div>
       <div id="main-content">
-        <!-- <div id="main-spinner" class="spinner"></div> -->
 
         <div id="chats">
         </div>
@@ -56,15 +50,8 @@
           <button id="send" class="controlButton" onclick="send()" >Send</button>
           <button id="newQuestion" class="controlButton2" onclick="newQuestion()" >New Round</button>
         </div>
-        <!-- <div id="who-container">
-          <p id="who-label">Who's online</p>
-          <div id="who-content">
-            <div id="who"></div>
-          </div>
-        </div> -->
       </div>
     </div>
-    <!-- <div id="reply-tooltip" class="tooltip">Reply</div> -->
     <div id="copy-tooltip" class="tooltip">Copy</div>
     <script src="main.js"></script>
   </body>
