@@ -229,7 +229,7 @@ const sleep = (milliseconds) => {
 
 function changeQuestion(){
       var question = document.getElementById('question');
-      question.classList.toggle('fade');
+      question.classList.add('fade');
 sleep(600).then(() => {
       $('#question').children("span").remove();
       $('#question').append("<span>" + newQuestFinal + "</span>");
@@ -240,7 +240,7 @@ sleep(600).then(() => {
 while(div.firstChild){
     div.removeChild(div.firstChild);
 }
-      question.classList.toggle('fade');
+      question.classList.remove('fade');
 })
 }
 
@@ -253,7 +253,7 @@ function showWin(winner){
   $("#close").addClass("open");
   $("#winner").text(winner);
    var question = document.getElementById('question');
-    question.classList.toggle('fade');
+    question.classList.add('fade');
   
 $("#close").click(function() {
   $("#world").removeClass("open");
@@ -262,7 +262,7 @@ $("#close").click(function() {
   $("#close").removeClass("open");
 
   sleep(200).then(() => {
-      question.classList.toggle('fade');
+      question.classList.remove('fade');
   })
 
 
