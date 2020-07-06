@@ -8,6 +8,8 @@ $('#name').focus();
 
 var turnTaken = false;
 var voted = false;
+var secondsLeft = 40;
+var afk = false;
 
 var time;
 var newQuestFinal;
@@ -69,8 +71,19 @@ socket.on('who', data => {
 		$('#who').append("<span style='color:" + p.color + "'>" + p.name + '<br>');
 	}
 });
+socket.on('timeLeft', data => {
+secondsLeft = data;
+});
 socket.on('waiting', data => {
-$('#chats').html('<div style="text-align: center" class="red">Waiting on: ' + data + '.</div>');
+$('#chats').html('<div style="text-align: center" class="red">Waiting on: ' + data + '<br> ' + secondsLeft + ' seconds remaining.</div>');
+});
+socket.on('voteTime', data => {
+  console.log(data)
+if(document.getElementById("secondsLeft")){
+document.getElementById("secondsLeft").innerHTML = ('<div id="secondsLeft" style="text-align: center" class="red">'+  data + ' seconds left to vote.</div>');
+}else{
+document.getElementById("chats").innerHTML += ('<div id="secondsLeft" style="text-align: center" class="red">'+  data + ' seconds left to vote.</div>');
+}
 });
 socket.on('lobby', data => {
 $('#chats').html('<div style="text-align: center" class="red">Current players: ' + data + '<br>waiting for more.</div>');
@@ -80,6 +93,7 @@ socket.on('quest', data => {
   changeQuestion();
 });
 socket.on('afk', data => {
+  afk = true;
 var afk = document.getElementById('afk');
 afk.classList.add('visible')
 var mainContainer = document.getElementById('main-container'); mainContainer.classList.add('dissapear')
@@ -96,15 +110,12 @@ socket.on('clear', data => {
 socket.on('time', data => {
   time = data;
 })
-function reply(name) {
-	if (
-		$('#message')
-			.val()
-			.search('@' + name) == -1
-	) {
-		$('#message').val('@' + name + ' ' + $('#message').val());
-	}
+setInterval(() => {
+if(afk){
+var question = document.getElementById('question'); 
+question.classList.add('fade')
 }
+}, 1000);
 function send() {
   if(!turnTaken){
 	var message = $('#message').val();
@@ -198,6 +209,7 @@ function changeQuestion(){
       var question = document.getElementById('question');
       question.classList.add('fade');
 sleep(600).then(() => {
+      console.log(newQuestFinal)
       $('#question').children("span").remove();
       $('#question').append("<span>" + newQuestFinal + "</span>");
       turnTaken = false;
@@ -208,6 +220,7 @@ while(div.firstChild){
     div.removeChild(div.firstChild);
 }
       question.classList.remove('fade');
+      document.getElementById(chats).removeChild(secondsLeft);
 })
 }
 
