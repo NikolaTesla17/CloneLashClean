@@ -78,6 +78,7 @@ function roundVote(){
 
 function closeWinner(){
       voteSong.pause();
+      lobbySong.pause();
     gameSong.play();
   $("#world").removeClass("open");
   $("#winner").removeClass("open");
@@ -105,6 +106,7 @@ newQuestion();
 });
 socket.on('allClosed', data => {
 voteSong.pause();
+lobbySong.pause();
 closeWinner();
 gameSong.play();
 });
@@ -121,6 +123,8 @@ document.getElementById("chats").innerHTML += ('<div id="secondsLeft" style="tex
 socket.on('lobby', data => {
 $('#chats').html('<div style="text-align: center" class="red">Current players: ' + data + '<br>waiting for more.</div>');
 lobbySong.currentTime = 0;
+gameSong.pause();
+voteSong.pause();
 lobbySong.play();
 });
 socket.on('quest', data => {
