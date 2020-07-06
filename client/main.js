@@ -5,11 +5,14 @@ $('#controls').fadeOut();
 $('#copy-tooltip').hide();
 $('#name').focus();
 
-
+var gameSong = new Audio('songs/lolipops&roses.mp3');
+var voteSong = new Audio('songs/route101.mp3');
+var lobbySong = new Audio('songs/fandango.mp3');
 var turnTaken = false;
 var voted = false;
 var secondsLeft = 40;
 var afk = false;
+var winDisplay = false;
 
 var time;
 var newQuestFinal;
@@ -22,14 +25,14 @@ function rename() {
 	$('#controls').animate({opacity: 'toggle'}, 500);
 	$("#main-container").animate({ height: 'toggle', opacity: 'toggle' }, 500);
 	$('#message').focus();
-
-  var game = $('#game').val();
-  if (isEmpty(game)) game = 'default';
-  	socket.emit('game', game);
-  	$('#game-info').hide();
 }
 var socket = io();
 socket.on('chats', data => {
+  if(data.length != 0){
+    gameSong.pause();
+    lobbySong.pause();
+    voteSong.play();
+  }
  
 	var reachedEnd = false;
 	if (
@@ -41,7 +44,8 @@ socket.on('chats', data => {
 	) {
 		reachedEnd = true;
 	}
-	$('#main-spinner').hide();
+
+
 	var html = "";
 	for(var d of data){
 	  
@@ -65,20 +69,36 @@ socket.on('chats', data => {
 });
 
 
-socket.on('who', data => {
-	$('#who').html('');
-	for (var p of data) {
-		$('#who').append("<span style='color:" + p.color + "'>" + p.name + '<br>');
-	}
-});
+function closeWinner(){
+      voteSong.pause();
+    gameSong.play();
+  $("#world").removeClass("open");
+  $("#winner").removeClass("open");
+  $("#close").removeClass("open");
+
+  question.style.visibility = "hidden";
+      question.classList.add('fade');
+  sleep(400).then(() => {
+        question.style.visibility = "visible";
+             question.classList.remove('fade');
+             winDisplay = false;
+             
+  })
+}
+
+
 socket.on('timeLeft', data => {
 secondsLeft = data;
+});
+socket.on('allClosed', data => {
+voteSong.pause();
+closeWinner();
+gameSong.play();
 });
 socket.on('waiting', data => {
 $('#chats').html('<div style="text-align: center" class="red">Waiting on: ' + data + '<br> ' + secondsLeft + ' seconds remaining.</div>');
 });
 socket.on('voteTime', data => {
-  console.log(data)
 if(document.getElementById("secondsLeft")){
 document.getElementById("secondsLeft").innerHTML = ('<div id="secondsLeft" style="text-align: center" class="red">'+  data + ' seconds left to vote.</div>');
 }else{
@@ -87,6 +107,8 @@ document.getElementById("chats").innerHTML += ('<div id="secondsLeft" style="tex
 });
 socket.on('lobby', data => {
 $('#chats').html('<div style="text-align: center" class="red">Current players: ' + data + '<br>waiting for more.</div>');
+lobbySong.currentTime = 0;
+lobbySong.play();
 });
 socket.on('quest', data => {
   newQuestFinal = data;
@@ -94,6 +116,8 @@ socket.on('quest', data => {
 });
 socket.on('afk', data => {
   afk = true;
+gameSong.pause();
+voteSong.pause();
 var afk = document.getElementById('afk');
 afk.classList.add('visible')
 var mainContainer = document.getElementById('main-container'); mainContainer.classList.add('dissapear')
@@ -118,6 +142,8 @@ question.classList.add('fade')
 }, 1000);
 function send() {
   if(!turnTaken){
+  gameSong.pause();
+  gameSong.currentTime = 0
 	var message = $('#message').val();
 	if (!isEmpty(message)) {
 		socket.emit('message', message);
@@ -206,10 +232,10 @@ const sleep = (milliseconds) => {
 }
 
 function changeQuestion(){
+  if(!afk){
       var question = document.getElementById('question');
       question.classList.add('fade');
 sleep(600).then(() => {
-      console.log(newQuestFinal)
       $('#question').children("span").remove();
       $('#question').append("<span>" + newQuestFinal + "</span>");
       turnTaken = false;
@@ -219,9 +245,16 @@ sleep(600).then(() => {
 while(div.firstChild){
     div.removeChild(div.firstChild);
 }
+      gameSong.currentTime = 0
+      if(!winDisplay){
+        lobbySong.pause();
+        voteSong.pause();
+        gameSong.play();
+      }
       question.classList.remove('fade');
       document.getElementById(chats).removeChild(secondsLeft);
 })
+}
 }
 
 function showWin(winner){
@@ -234,22 +267,13 @@ function showWin(winner){
   $("#winner").addClass("open");
   $("#close").addClass("open");
   $("#winner").text(winner);
+  winDisplay = true;
 
   
 $("#close").click(function() {
-  $("#world").removeClass("open");
-  $("#winner").removeClass("open");
-  $("#close").removeClass("open");
-
-  question.style.visibility = "hidden";
-      question.classList.add('fade');
-  sleep(400).then(() => {
-        question.style.visibility = "visible";
-             question.classList.remove('fade');
-  })
-
-
+  	socket.emit('close', );
 });
+
 
 // Confetti
 (function() {

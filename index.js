@@ -3,6 +3,9 @@ var names = ['default val'];
 var votes = 0;
 var excpected = [];
 var have = [];
+var startTime;
+var skipped = false;
+voting = false;
 
 const start = Date.now();
 
@@ -46,6 +49,7 @@ io.sockets.on('connection', socket => {
   });
 
 	socket.on('name', name => {
+    startTime = Date.now()
 	  name = encode(name);
 		socketList[socket.id] = socket;
 		if (name == 'Guest') {
@@ -91,6 +95,9 @@ currentPlayers()
     voteComplete();
     emitChats();
   });
+    socket.on('close', () => {
+    io.sockets.emit('allClosed', );
+  });
 	socket.on('disconnect', () => {
 			delete socketList[socket.id];
 		saveChats();
@@ -106,6 +113,59 @@ setInterval(() => {
        }
    }
 }, 9000);
+
+setInterval(() => {
+  var timeTaken = ((Date.now() - startTime)/1000);
+  var secondsLeft = Math.round(parseFloat(45-timeTaken));
+  if(!answerComplete() && (skipped == false)){
+  io.sockets.emit('timeLeft', secondsLeft);
+  dontHave();
+  }
+  if(secondsLeft <= 0){
+    if(have.length != 0){
+      if(skipped == false){
+      skipped = true;
+      voteTime = Date.now();
+      }
+      emitChats();
+
+    }else{
+      refreshQuest();
+    }
+  }
+  if(skipped == true && voting){
+  var voteOverun = ((Date.now() - voteTime)/1000);
+  var secondsLeft = Math.round(parseFloat(14-voteOverun));
+  io.sockets.emit('voteTime', secondsLeft);
+
+  if(voteOverun>=13.5){
+      voting = false;
+      pointsArray = [];
+  justPoints = [];
+  for (var j in chats) {
+    pointsArray.push({
+    score: chats[j].points,
+    name: chats[j].username
+    })
+	}
+  for (var k in pointsArray) {
+  justPoints.push(pointsArray[k].score);
+}
+  var roundWinnerPoints = Math.max(...justPoints);
+    for (var k in pointsArray) {
+      if(pointsArray[k].score == roundWinnerPoints){
+        var roundWinner = pointsArray[k].name;
+          io.sockets.emit('winner', roundWinner);
+        break;
+      }
+    }
+
+votes = 0;
+refreshQuest();
+skipped = false;
+  }
+  }
+}, 1000);
 
 function emitChats(){
  for(var i in socketList){
@@ -128,7 +188,6 @@ function saveChats() {
 		}
 	});
 }
-
 function getChats() {
 	fs.readFile(gameDoc, 'utf8', function(err, data) {
 		if (err) {
@@ -154,6 +213,8 @@ function getRandomColor() {
 }
 
 async function getQuestion() {
+  voting = false;
+  startTime = Date.now()
   const nthline = require('nthline'),
   filePath = 'prompts.txt',
   rowIndex = getRandomLine();
@@ -189,12 +250,20 @@ function answerComplete(){
   updateArrays();
 
   if(have.length == excpected.length){
+    voting = true;
     emitChats();
+    if(have.length != 0){
+          if(skipped == false){
+          voteTime = Date.now();
+          skipped = true;
+          }
+    }
+    return true;
   } else {
-    dontHave()
-
+    return false;
   }
 }
+
 
 function dontHave(){
   updateArrays();
@@ -268,5 +337,6 @@ if(excpectedVotes == votes){
 
 votes = 0;
 refreshQuest();
+skipped = false;
 }
 }
