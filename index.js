@@ -5,7 +5,8 @@ var excpected = [];
 var have = [];
 var startTime;
 var skipped = false;
-voting = false;
+var roundVote = 0;
+var voting = false;
 
 const start = Date.now();
 
@@ -102,11 +103,16 @@ currentPlayers()
 			delete socketList[socket.id];
 		saveChats();
 	});
+  socket.on('roundVote', () => {
+			//delete socketList[socket.id];
+      roundVote++;
+      newRoundCheck(socket.id);
+	});
 });
 setInterval(() => {
    for(var i in socketList){
        const millis = Date.now() - socketList[i].lastResponse;
-       if(millis > 90000){
+       if(millis > 180000){
          socketList[i].emit('afk', );
         delete socketList[i];
       	saveChats();
@@ -303,6 +309,17 @@ function updateArrays(){
   }
   for (var y in chats){
     have.push(chats[y].username);
+  }
+}
+
+function newRoundCheck(i){
+  updateArrays()
+  if(excpected.length == roundVote){
+    socketList[i].emit('newRound', 0)
+    roundVote = 0;
+  }else{
+    var toSend = (roundVote + "/" + excpected.length + " votes");
+    io.sockets.emit('newRound', toSend);
   }
 }
 
