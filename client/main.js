@@ -10,14 +10,15 @@ var voteSong = new Audio('songs/route101.mp3');
 var lobbySong = new Audio('songs/fandango.mp3');
 var turnTaken = false;
 var voted = false;
-var secondsLeft = 40;
+var secondsLeft = 45;
 var afk = false;
 var winDisplay = false;
+var name;
 
 var time;
 var newQuestFinal;
 function rename() {
-	var name = $('#name').val();
+	name = $('#name').val();
 	if (isEmpty(name)) name = 'Guest';
 	socket.emit('name', name);
 	$('#prompt').fadeOut(200);
@@ -48,9 +49,12 @@ socket.on('chats', data => {
 
 	var html = "";
 	for(var d of data){
-	  
     timeStr = d.points;
-	  var htmlToAdd = '<div class="message">' + d.message + ' <span class="time">'+timeStr+' votes</span>' + (d.id? '<button class="vote" id="'+d.id+'">Vote</button>': "") + '</div>';
+    if(d.username == name){
+	  var htmlToAdd = '<div class="message">' + d.message + ' <span class="time">'+timeStr+' votes</span></div>';
+    } else {
+    var htmlToAdd = '<div class="message">' + d.message + ' <span class="time">'+timeStr+' votes</span>' + (d.id? '<button class="vote" id="'+d.id+'">Vote</button>': "") + '</div>';
+    }
 
     html += htmlToAdd;
 	}
@@ -68,6 +72,9 @@ socket.on('chats', data => {
 
 });
 
+function roundVote(){
+		socket.emit('roundVote', );
+}
 
 function closeWinner(){
       voteSong.pause();
@@ -82,13 +89,19 @@ function closeWinner(){
         question.style.visibility = "visible";
              question.classList.remove('fade');
              winDisplay = false;
-             
   })
 }
 
 
 socket.on('timeLeft', data => {
 secondsLeft = data;
+});
+socket.on('newRound', data => {
+if(data == 0){
+newQuestion();
+} else {
+  document.getElementById("newQuestion").textContent = (data);
+}
 });
 socket.on('allClosed', data => {
 voteSong.pause();
@@ -138,6 +151,9 @@ setInterval(() => {
 if(afk){
 var question = document.getElementById('question'); 
 question.classList.add('fade')
+gameSong.pause();
+voteSong.pause();
+lobbySong.pause();
 }
 }, 1000);
 function send() {
@@ -224,7 +240,6 @@ $('#name').keypress(e => {
 function newQuestion(){
  		  socket.emit('question', );
          $('#message').val('');
-
 }
 
 const sleep = (milliseconds) => {
@@ -233,6 +248,7 @@ const sleep = (milliseconds) => {
 
 function changeQuestion(){
   if(!afk){
+      document.getElementById("newQuestion").textContent = ("New Round");
       var question = document.getElementById('question');
       question.classList.add('fade');
 sleep(600).then(() => {
@@ -252,7 +268,9 @@ while(div.firstChild){
         gameSong.play();
       }
       question.classList.remove('fade');
+      if(document.getElementById(secondsLeft)){
       document.getElementById(chats).removeChild(secondsLeft);
+      }
 })
 }
 }
