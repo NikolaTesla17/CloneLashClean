@@ -146,29 +146,7 @@ setInterval(() => {
 
   if(voteOverun>=13.5){
       voting = false;
-      pointsArray = [];
-  justPoints = [];
-  for (var j in chats) {
-    pointsArray.push({
-    score: chats[j].points,
-    name: chats[j].username
-    })
-	}
-  for (var k in pointsArray) {
-  justPoints.push(pointsArray[k].score);
-}
-  var roundWinnerPoints = Math.max(...justPoints);
-    for (var k in pointsArray) {
-      if(pointsArray[k].score == roundWinnerPoints){
-        var roundWinner = pointsArray[k].name;
-          io.sockets.emit('winner', roundWinner);
-        break;
-      }
-    }
-
-votes = 0;
-refreshQuest();
-skipped = false;
+      giveWinner();
   }
   }
 }, 1000);
@@ -323,14 +301,8 @@ function newRoundCheck(i){
   }
 }
 
-function voteComplete(){
-var excpectedVotes = 0;
-	for (var j in socketList) {
-    excpectedVotes++;
-	}
-
-if(excpectedVotes == votes){
-  pointsArray = [];
+function giveWinner(){
+    pointsArray = [];
   justPoints = [];
   for (var j in chats) {
     pointsArray.push({
@@ -342,6 +314,7 @@ if(excpectedVotes == votes){
   justPoints.push(pointsArray[k].score);
 }
   var roundWinnerPoints = Math.max(...justPoints);
+  if(roundWinnerPoints!=0){
     for (var k in pointsArray) {
       if(pointsArray[k].score == roundWinnerPoints){
         var roundWinner = pointsArray[k].name;
@@ -349,11 +322,22 @@ if(excpectedVotes == votes){
         break;
       }
     }
+  } else {
+    io.sockets.emit('winner', "your answers are all bad");
+  }
 
-
-
-votes = 0;
+  votes = 0;
 refreshQuest();
 skipped = false;
+}
+
+function voteComplete(){
+var excpectedVotes = 0;
+	for (var j in socketList) {
+    excpectedVotes++;
+	}
+
+if(excpectedVotes == votes){
+giveWinner();
 }
 }
