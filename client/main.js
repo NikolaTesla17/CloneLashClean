@@ -14,6 +14,7 @@ var secondsLeft = 45;
 var afk = false;
 var winDisplay = false;
 var name;
+var voteRound = false;
 
 var time;
 var newQuestFinal;
@@ -73,10 +74,14 @@ socket.on('chats', data => {
 });
 
 function roundVote(){
+  if(!voteRound){
 		socket.emit('roundVote', );
+    voteRound = true;
+  }
 }
 
 function closeWinner(){
+  voteRound = false;
    $('#controls').fadeIn();
       voteSong.pause();
       lobbySong.pause();
@@ -254,6 +259,7 @@ const sleep = (milliseconds) => {
 
 function changeQuestion(){
   if(!afk){
+      voteRound = false;
       document.getElementById("newQuestion").textContent = ("New Round");
       var question = document.getElementById('question');
       question.classList.add('fade');
