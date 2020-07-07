@@ -77,6 +77,7 @@ function roundVote(){
 }
 
 function closeWinner(){
+   $('#controls').fadeIn();
       voteSong.pause();
       lobbySong.pause();
     gameSong.play();
@@ -162,6 +163,7 @@ lobbySong.pause();
 }, 1000);
 function send() {
   if(!turnTaken){
+  $('#controls').fadeOut();
   gameSong.pause();
   gameSong.currentTime = 0
 	var message = $('#message').val();
