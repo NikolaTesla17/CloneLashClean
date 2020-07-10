@@ -393,10 +393,8 @@ async function getQuestion(gameToGive) {
   filePath = 'prompts.txt',
   rowIndex = getRandomLine();
 const finalQuestion = await nthline(rowIndex, filePath)
-var modifiedQuestion = finalQuestion.split("~");
-var finished = (modifiedQuestion[0] + getRandomName() + modifiedQuestion[1]);
     emitChats(gameToGive);
-return(finished);
+return(finalQuestion);
 }
 
 function getRandomLine() {
