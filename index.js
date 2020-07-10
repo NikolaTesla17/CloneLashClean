@@ -1,14 +1,7 @@
-var gameDoc = "default.txt";
-var names = ['default val'];
-var votes = 0;
-var excpected = [];
-var have = [];
-var startTime;
-var skipped = false;
-var roundVote = 0;
-var voting = false;
-
-const start = Date.now();
+var gameDoc = "chats.txt";
+var games = [];
+var rooms = [];
+var monitors = [];
 
 var express = require('express');
 var app = express();
@@ -41,34 +34,106 @@ rl.on('line', function (line) {
 rl.on('close', function () {
 });
 
+function removeA(arr) {
+    var what, a = arguments, L = a.length, ax;
+    while (L > 1 && arr.length) {
+        what = a[--L];
+        while ((ax= arr.indexOf(what)) !== -1) {
+            arr.splice(ax, 1);
+        }
+    }
+    return arr;
+}
+
 io.sockets.on('connection', socket => {
   if(!chats.length)
 	socket.color = getRandomColor();
 
   socket.on('question', question => {
-  refreshQuest();
+  refreshQuest(socketList[socket.id].game);
   });
 
+  socket.on('game', game => {
+  socketList[socket.id] = socket;
+  socketList[socket.id].game = game;
+  socketList[socket.id].monitor = false;
+
+  if(!games.includes(game)){
+  games.push(game);
+  rooms.push({
+    room:game,
+    gameFrequency:1,
+    votes:0,
+    startTime:Date.now(),
+    skipped:false,
+    voting:false,
+    roundVote:0,
+    haveAnswers:0,
+    players:[],
+    playersAnswered:[],
+    voteTime:0,
+    lobby:true
+  });
+  }else{
+    if(rooms[games.indexOf(game.toString())].voting == false){
+    rooms[games.indexOf(game.toString())].gameFrequency +=1;
+    }else{
+          rooms[games.indexOf(game.toString())].gameFrequency +=1;
+
+
+
+
+        
+rooms[games.indexOf(game.toString())].votes = 0;
+rooms[games.indexOf(game.toString())].skipped = false;
+refreshQuest(game);
+
+  var chatsTotal = chats.length;
+  for (var k = (chats.length-1);k>=0;k--) {
+if(chats[k].room == game){
+  chats.splice(k,1);
+}
+  }
+  rooms[games.indexOf(game.toString())].playersAnswered = [];
+  rooms[games.indexOf(game.toString())].haveAnswers = [];
+    }
+  }
+  });
+
+  socket.on('monitor', game => {
+  socketList[socket.id] = socket;
+  socketList[socket.id].game = game;
+  socketList[socket.id].monitor = true;
+
+  monitors.push({
+    socketID: socket.id,
+    game: game
+    })
+  });
+
+
 	socket.on('name', name => {
-    startTime = Date.now()
 	  name = encode(name);
-		socketList[socket.id] = socket;
 		if (name == 'Guest') {
 			socket.name = name + ' ' + guests;
 			guests++;
 		} else socket.name = name;
 
-currentPlayers();
+currentPlayers(socket.game);
+rooms[games.indexOf(socket.game.toString())].players.push(socket.name);
 socket.lastResponse = Date.now();
+
+rooms[games.indexOf(socket.game.toString())].startTime = Date.now();
 	});
 
 
-  socket.on('players', players => {
-currentPlayers()
-  });
+
 
 	socket.on('message', message => {
-	  if(message.length > 100) return;
+	  if(message.length > 100){
+      console.log("erorr, message to long")
+      return;
+    }
 	  message = encode(message);
 		chats.push({
 		  message:
@@ -78,90 +143,217 @@ currentPlayers()
 				socketId: socket.id,
 				id: Math.random(),
         points: 0,
-        username: socket.name
+        username: socket.name,
+        room: socketList[socket.id].game
 		});
 
 		saveChats();
-    answerComplete();
+    rooms[games.indexOf(socketList[socket.id].game.toString())].haveAnswers++;
+    rooms[games.indexOf(socketList[socket.id].game.toString())].playersAnswered.push(socket.name);
+    answerComplete(socketList[socket.id].game);
     socket.lastResponse = Date.now();
 	});
   socket.on('vote', id => {
     for(var i in chats){
       if(chats[i].id == id){
         chats[i].points++;
-        votes++;
+        rooms[games.indexOf(socketList[socket.id].game.toString())].votes++;
         break;
       }
     }
-    voteComplete();
-    emitChats();
+    voteComplete(socket.id);
+    emitChats(socketList[socket.id].game);
   });
     socket.on('close', () => {
-    io.sockets.emit('allClosed', );
+    io.sockets.emit('allClosed', socketList[socket.id].game);
   });
+
 	socket.on('disconnect', () => {
-			delete socketList[socket.id];
+if(typeof socketList[socket.id] != "undefined"){
+
+      if(socketList[socket.id].monitor){
+        monitorId = [];
+        
+        for(i in monitors){
+          monitorId.push(monitors[i].socketID);
+        }
+        for(k in monitorId){
+          if(monitorId[k] == socket.id){
+            monitors.splice(k, 1);
+          }
+        }
+
+      } else if(!socketList[socket.id].monitor){
+  var roomNum = games.indexOf((socketList[socket.id].game).toString());
+
+if(rooms[roomNum].players.includes(socketList[socket.id].name)){
+removeA(rooms[roomNum].players, socketList[socket.id].name);
+    }
+    rooms[roomNum].gameFrequency--;
+
+if(rooms[roomNum].playersAnswered.includes(socketList[socket.id].name)){
+removeA(rooms[roomNum].playersAnswered, socketList[socket.id].name);
+    }
+      }else{
+        console.log("person left without selecting an option")
+      }
+
+      delete socketList[socket.id];
+    }
 		saveChats();
 	});
   socket.on('roundVote', () => {
-			//delete socketList[socket.id];
-      roundVote++;
+      rooms[games.indexOf(socketList[socket.id].game.toString())].roundVote++; 
+
       newRoundCheck(socket.id);
 	});
 });
+
 setInterval(() => {
    for(var i in socketList){
        const millis = Date.now() - socketList[i].lastResponse;
        if(millis > 180000){
          socketList[i].emit('afk', );
-        delete socketList[i];
-      	saveChats();
-       }
+if(typeof socketList[i] != "undefined"){
+
+      if(socketList[i].monitor){
+        console.log("just a monitor")
+      } else if(!socketList[i].monitor){
+  var roomNum = games.indexOf((socketList[i].game).toString());
+
+if(rooms[roomNum].players.includes(socketList[i].name)){
+removeA(rooms[roomNum].players, socketList[i].name);
+    }
+    rooms[roomNum].gameFrequency--;
+
+if(rooms[roomNum].playersAnswered.includes(socketList[i].name)){
+removeA(rooms[roomNum].playersAnswered, socketList[i].name);
+    }
+      }else{
+        console.log("unreachable state reached")
+      }
+      delete socketList[i];
+    }
+		saveChats();
+    }
    }
 }, 9000);
 
-setInterval(() => {
-  var timeTaken = ((Date.now() - startTime)/1000);
-  var secondsLeft = Math.round(parseFloat(45-timeTaken));
-  if(!answerComplete() && (skipped == false)){
-  io.sockets.emit('timeLeft', secondsLeft);
-  dontHave();
-  }
-  if(secondsLeft <= 0){
-    if(have.length != 0){
-      if(skipped == false){
-      skipped = true;
-      voteTime = Date.now();
-      }
-      emitChats();
 
+
+setInterval(() => {
+  for(var we in rooms){
+  var timeTaken = ((Date.now() - rooms[we].startTime)/1000);
+  var timeRemaining = Math.round(parseFloat(45-timeTaken));
+  var secondsLeft = ({
+    secondsLeft:timeRemaining,
+    game:rooms[we].room
+  })
+  if(rooms[we].gameFrequency == 0){
+    rooms[we].lobby = true;
+  }
+  if(rooms[we].lobby){
+    currentPlayers(rooms[we].room)
+    io.sockets.emit('timeLeft', secondsLeft);
+  }else if(!answerComplete(rooms[we].room) && (rooms[we].skipped == false)){
+  io.sockets.emit('timeLeft', secondsLeft);
+  dontHave(rooms[we].room);
+  }
+  if(secondsLeft.secondsLeft <= 0){
+    if(rooms[we].haveAnswers != 0){
+      if(rooms[we].skipped == false){
+      rooms[we].voteTime = Date.now();
+      rooms[we].voting = true;
+      rooms[we].skipped = true;
+      }
+      emitChats(rooms[we].room);
     }else{
-      refreshQuest();
+      refreshQuest(rooms[we].room);
     }
   }
-  if(skipped == true && voting){
-  var voteOverun = ((Date.now() - voteTime)/1000);
-  var secondsLeft = Math.round(parseFloat(14-voteOverun));
+  if(rooms[we].skipped == true && rooms[we].voting){
+  var voteOverun = ((Date.now() - rooms[we].voteTime)/1000);
+  var timeRemaining = Math.round(parseFloat(14-voteOverun));
+  var secondsLeft = ({
+    secondsLeft:timeRemaining,
+    game:rooms[we].room
+  })
   io.sockets.emit('voteTime', secondsLeft);
 
   if(voteOverun>=13.5){
-      voting = false;
-      giveWinner();
+      rooms[we].voting = false;
+      giveWinner(rooms[we].room);
+  }
   }
   }
 }, 1000);
 
-function emitChats(){
- for(var i in socketList){
+
+
+
+
+function emitChats(roomHere){
+  if(monitors.length != 0){
+    var monitoringGames = [];
+    var monitoringIds = [];
+    var socketIds = [];
+
+  for(var o in monitors){
+  monitoringGames.push(monitors[o].game);
+}
+  for(var o in monitors){
+  monitoringIds.push(monitors[o].socketID);
+}
+
+var idsNeeded = getAllIndexes(monitoringGames, roomHere);
+
+
     var pack = chats.map(c => {
       if(c.socketId != i) {
-        return {message: c.message, time: c.time, points: c.points, id: c.id};
+        return {message: c.message, time: c.time, points: c.points, id: c.id, room: c.room, username: c.username};
       }
       else{
         return c;
       }
     });
-    socketList[i].emit('chats', pack);
+    for(var i in socketList){
+   socketIds.push(socketList[i].id)
+    }
+    for(i in idsNeeded){
+      var socketListsNeeded = getAllIndexes(socketIds, monitoringIds[idsNeeded[i]]);
+    if(typeof socketList[monitoringIds[i]] != 'undefined'){
+    socketList[monitoringIds[i]].emit('chats', pack);
+    }
+    }
+}
+
+var roomPlayers = rooms[games.indexOf(roomHere.toString())].players;
+var socketNames = [];
+var socketIds = [];
+for(var o in socketList){
+  socketNames.push(socketList[o].name);
+}
+for(var o in socketList){
+  socketIds.push(socketList[o].id);
+}
+
+
+ for(var i in roomPlayers){
+   var socketNum = (socketNames.indexOf(roomPlayers[i].toString()));
+   var socketNumToSend = socketIds[socketNum];
+    var pack = chats.map(c => {
+      if(c.socketId != i) {
+        return {message: c.message, time: c.time, points: c.points, id: c.id, room: c.room, username: c.username};
+      }
+      else{
+        return c;
+      }
+    });
+    for(var o in socketNames){
+    if(o == socketNum){
+    socketList[socketNumToSend].emit('chats', pack);
+    }
+    }
   }
 }
 function saveChats() {
@@ -196,28 +388,36 @@ function getRandomColor() {
 	return color;
 }
 
-async function getQuestion() {
-  voting = false;
-  startTime = Date.now()
+async function getQuestion(gameToGive) {
   const nthline = require('nthline'),
   filePath = 'prompts.txt',
   rowIndex = getRandomLine();
 const finalQuestion = await nthline(rowIndex, filePath)
-    chats.splice(0, chats.length);
-    emitChats();
-return(finalQuestion);
+var modifiedQuestion = finalQuestion.split("~");
+var finished = (modifiedQuestion[0] + getRandomName() + modifiedQuestion[1]);
+    emitChats(gameToGive);
+return(finished);
 }
 
 function getRandomLine() {
   min = Math.ceil(0);
   max = Math.floor(linesCount-1);
-  return Math.floor(Math.random() * (max - min + 1)) + min; //The maximum is inclusive and the minimum is inclusive 
+  return Math.floor(Math.random() * (max - min + 1)) + min; 
 }
 
-async function refreshQuest(){
-  const questToSend = await getQuestion();
+async function refreshQuest(gameToGive){
+  rooms[games.indexOf(gameToGive)].lobby = false;
+  rooms[games.indexOf(gameToGive)].voting = false;
+  rooms[games.indexOf(gameToGive)].startTime = Date.now()
+  const questToSend = await getQuestion(gameToGive);
 
-  io.sockets.emit('quest', questToSend);
+  var toSend = ({
+    game:gameToGive,
+    quest:questToSend
+})
+
+  io.sockets.emit('quest', toSend);
+  return;
 }
 
 function getRandomName(){
@@ -230,51 +430,52 @@ function getRandomName(){
   return randomName;
 }
 
-function answerComplete(){
-  updateArrays();
-
-  if(have.length == excpected.length){
-    voting = true;
-    emitChats();
-    if(have.length != 0){
-          if(skipped == false){
-          voteTime = Date.now();
-          skipped = true;
+function answerComplete(room){
+    rooms[games.indexOf(room)].lobby = false;
+  if(rooms[games.indexOf(room)].gameFrequency == rooms[games.indexOf(room)].haveAnswers){
+rooms[games.indexOf(room)].voting = true;
+    emitChats(room);
+    if(rooms[games.indexOf(room)].haveAnswers != 0){
+          if(rooms[games.indexOf(room)].skipped == false){
+          rooms[games.indexOf(room)].voteTime = Date.now();
+          rooms[games.indexOf(room)].skipped = true;
           }
     }
     return true;
   } else {
     return false;
   }
-}
-
-
-function dontHave(){
-  updateArrays();
-    pack = "";
-  for(var z in excpected) {
-
-    if(!(have.includes(excpected[z]))){
-      pack+=(" " + excpected[z] );
-    }
-
   }
-for(var i in socketList){
-    socketList[i].emit('waiting', pack);
-  }
+
+
+
+
+
+function dontHave(roomToCheck){
+  const y = rooms[games.indexOf(roomToCheck.toString())].players
+  const x = rooms[games.indexOf(roomToCheck.toString())].playersAnswered
+
+var notHave = y.filter(e => !x.includes(e));
+
+  var toSend = ({
+    game:roomToCheck,
+    waiting:notHave
+})
+
+  io.sockets.emit('waiting', toSend);
   return;
 }
 
 
-function currentPlayers(){
-  updateArrays();
-    pack = "";
-  for(var z in excpected) {
-      pack+=(" " + excpected[z]);
-    }
-for(var i in socketList){
-    socketList[i].emit('lobby', pack);
-  }
+function currentPlayers(roomToCheck){
+  const y = rooms[games.indexOf(roomToCheck.toString())].players
+
+  var toSend = ({
+    game:roomToCheck,
+    have:y
+})
+
+  io.sockets.emit('lobby', toSend);
   return;
 }
 
@@ -289,55 +490,89 @@ function updateArrays(){
     have.push(chats[y].username);
   }
 }
-
 function newRoundCheck(i){
-  updateArrays()
-  if(excpected.length == roundVote){
-    socketList[i].emit('newRound', 0)
-    roundVote = 0;
+  var toSend = [];
+  if(rooms[games.indexOf(socketList[i].game)].gameFrequency <= rooms[games.indexOf(socketList[i].game)].roundVote){
+    toSend=({
+      message:0,
+      game:socketList[i].game
+    })
+    socketList[i].emit('newRound', toSend)
+    rooms[games.indexOf(socketList[i].game)].roundVote = 0;
+    rooms[games.indexOf(socketList[i].game)].haveAnswers = 0;
   }else{
-    var toSend = (roundVote + "/" + excpected.length + " votes");
+    toSend=({
+      message:rooms[games.indexOf(socketList[i].game)].roundVote + "/" + rooms[games.indexOf(socketList[i].game)].gameFrequency + " votes",
+      game:socketList[i].game
+    })
+     
     io.sockets.emit('newRound', toSend);
   }
 }
 
-function giveWinner(){
-    pointsArray = [];
+function getAllIndexes(arr, val) {
+    var indexes = [], i;
+    for(i = 0; i < arr.length; i++)
+        if (arr[i] === val)
+            indexes.push(i);
+    return indexes;
+}
+
+function giveWinner(gameToGive){
+  rooms[games.indexOf(gameToGive)].haveAnswers = 0;
+  pointsArray = [];
   justPoints = [];
+  chatsGames = [];
+  arrayGames = [];
   for (var j in chats) {
+    chatsGames.push(chats[j].room)
+  }
+  arrayGames = getAllIndexes(chatsGames, gameToGive);
+  for (var j in arrayGames) {
     pointsArray.push({
-    score: chats[j].points,
-    name: chats[j].username
+    points:chats[arrayGames[j]].points,
+    name:chats[arrayGames[j]].username
     })
 	}
   for (var k in pointsArray) {
-  justPoints.push(pointsArray[k].score);
+  justPoints.push(pointsArray[k].points);
 }
   var roundWinnerPoints = Math.max(...justPoints);
   if(roundWinnerPoints!=0){
     for (var k in pointsArray) {
-      if(pointsArray[k].score == roundWinnerPoints){
+      if(pointsArray[k].points == roundWinnerPoints){
         var roundWinner = pointsArray[k].name;
-          io.sockets.emit('winner', roundWinner);
+        var sendingIt = ({
+          roundWinner:roundWinner,
+          game:chats[k].room
+        })
+          io.sockets.emit('winner', sendingIt);
         break;
       }
     }
   } else {
-    io.sockets.emit('winner', "your answers are all bad");
+      var sendingIt = ({
+          roundWinner:"your answers are all bad",
+          game:gameToGive
+      })
+    io.sockets.emit('winner', sendingIt);
   }
 
-  votes = 0;
-refreshQuest();
-skipped = false;
+rooms[games.indexOf(gameToGive.toString())].votes = 0;
+rooms[games.indexOf(gameToGive.toString())].skipped = false;
+refreshQuest(gameToGive);
+
+  var chatsTotal = chats.length;
+  for (var k = (chats.length-1);k>=0;k--) {
+if(chats[k].room == gameToGive){
+  chats.splice(k,1);
+}
+  }
+  rooms[games.indexOf(gameToGive.toString())].playersAnswered = [];
 }
 
-function voteComplete(){
-var excpectedVotes = 0;
-	for (var j in socketList) {
-    excpectedVotes++;
-	}
-
-if(excpectedVotes == votes){
-giveWinner();
+function voteComplete(socket){
+if(rooms[games.indexOf(socketList[socket].game.toString())].gameFrequency == rooms[games.indexOf(socketList[socket].game.toString())].votes){
+giveWinner(socketList[socket].game);
 }
 }

@@ -14,11 +14,86 @@ var secondsLeft = 45;
 var afk = false;
 var winDisplay = false;
 var name;
+var game;
 var voteRound = false;
+var playersHave = [];
+var monitoring = false;
+var lobbying = true;
 
 var time;
 var newQuestFinal;
+function monitor(){
+  $('#monitor').fadeOut();
+  $('#menuButton').fadeOut(400);
+  $('#prompt').fadeOut(400);
+    $('#menu').fadeOut(400);
+  sleep(500).then(() => {
+  document.getElementById("monitor").style.visibility = "visible";
+    $('#monitor').fadeIn(500);
+  })
+}
+
+function closeMonitor(){
+  	$('#name-info').fadeOut(500);
+    $('#monitor').fadeOut(500);
+  sleep(500).then(() => {
+    $('#name-info').show();
+      document.getElementById("monitor").style.visibility = "hidden";
+  $('#menuButton').fadeIn(400);
+  $('#prompt').fadeIn(400);
+  })
+}
+
+$('#monitorGame').keypress(e => {
+	var code = e.keyCode || e.which;
+	if (code == 13) {
+		monitorGameSet();
+	}
+});
+
+function openMenu(){
+  $('#menuButton').fadeOut(400);
+  $('#menu').fadeOut();
+  $('#prompt').fadeOut(400);
+  sleep(500).then(() => {
+  document.getElementById("menu").style.visibility = "visible";
+    $('#menu').fadeIn(500);
+  })
+}
+function closeMenu(){
+      $('#menuButton').fadeIn(400);
+  $('#menu').fadeOut(400);
+
+  sleep(500).then(() => {
+  document.getElementById("menu").style.visibility = "hidden";
+    $('#prompt').fadeIn(500);
+  })
+}
+
+function monitorGameSet() {
+  $('#backButton').fadeOut(400);
+  monitoring = true;
+  game = $('#monitorGame').val();
+  if (isEmpty(game)) game = 'default';
+  $('#monitorGame').val('');
+	socket.emit('monitor', game);
+  document.getElementById("monitorTitle").innerHTML = "Game Code: " + game;
+    $('#monitorControls').fadeOut(400);
+      sleep(400).then(() => {
+      document.getElementById("monitorControls").innerHTML = "";
+      [].forEach.call(document.querySelectorAll('.monitorText'), function (el) {
+  el.style.visibility = 'visible';
+});
+      $('#monitorText').fadeIn(500);
+      })
+}
+
 function rename() {
+    $('#menuButton').fadeOut(100);
+  game = $('#game').val();
+  if (isEmpty(game)) game = 'default';
+	socket.emit('game', game);
+
 	name = $('#name').val();
 	if (isEmpty(name)) name = 'Guest';
 	socket.emit('name', name);
@@ -47,25 +122,33 @@ socket.on('chats', data => {
 		reachedEnd = true;
 	}
 
-
 	var html = "";
+  var toWrite = "";
 	for(var d of data){
     timeStr = d.points;
+    if(!monitoring){
+    if(d.room == game){
     if(d.username == name){
 	  var htmlToAdd = '<div class="message">' + d.message + ' <span class="time">'+timeStr+' votes</span></div>';
     } else {
     var htmlToAdd = '<div class="message">' + d.message + ' <span class="time">'+timeStr+' votes</span>' + (d.id? '<button class="vote" id="'+d.id+'">Vote</button>': "") + '</div>';
     }
-
     html += htmlToAdd;
+    }
+    }else{
+    toWrite += '<div class="message">' + d.message + ' <span class="boardPoints">'+timeStr+' votes</span></div>'
+    }
 	}
+  if(monitoring){
+  document.getElementById("answersMonitor").innerHTML = toWrite;
+  }
+
   $('#chats').html(html);
 	if (reachedEnd){
 		$('#chats').scrollTop(
 			$('#chats')[0].scrollHeight - $('#chats')[0].clientHeight
 		);
 	}
-
 	if (data.length == 0) {
 		$('#chats').html('<div style="text-align: center" class="red">Loading Question.</div>');
 	}
@@ -81,6 +164,9 @@ function roundVote(){
 }
 
 function closeWinner(){
+  if(monitoring){
+      $('#monitor').fadeIn(500);
+  }
   voteRound = false;
    $('#controls').fadeIn();
       voteSong.pause();
@@ -101,41 +187,100 @@ function closeWinner(){
 
 
 socket.on('timeLeft', data => {
-secondsLeft = data;
+if(data.game == game){
+secondsLeft = data.secondsLeft;
+if(monitoring){
+  if(lobbying){
+    var toWrite = secondsLeft + " seconds to join";
+    document.getElementById("gameTimeLeft").textContent = (toWrite);
+  }else{
+var toWrite = secondsLeft + " seconds to be witty";
+document.getElementById("gameTimeLeft").textContent = (toWrite);
+  }
+}
+}
 });
 socket.on('newRound', data => {
-if(data == 0){
+if(data.game == game){
+if(data.message == 0){
 newQuestion();
 } else {
-  document.getElementById("newQuestion").textContent = (data);
+  document.getElementById("newQuestion").textContent = (data.message);
+}
 }
 });
 socket.on('allClosed', data => {
+if(data == game){
 voteSong.pause();
 lobbySong.pause();
 closeWinner();
 gameSong.play();
+}
 });
 socket.on('waiting', data => {
-$('#chats').html('<div style="text-align: center" class="red">Waiting on: ' + data + '<br> ' + secondsLeft + ' seconds remaining.</div>');
+if(data.game == game){
+
+if(monitoring){
+var toWrite = "waiting on: " + data.waiting;
+document.getElementById("waitingOn").textContent = (toWrite);
+} else {
+$('#chats').html('<div style="text-align: center" class="red">Waiting on: ' + data.waiting + '<br> ' + secondsLeft + ' seconds remaining.</div>');
+}
+}
 });
 socket.on('voteTime', data => {
-if(document.getElementById("secondsLeft")){
-document.getElementById("secondsLeft").innerHTML = ('<div id="secondsLeft" style="text-align: center" class="red">'+  data + ' seconds left to vote.</div>');
+if(data.game == game){
+if(monitoring){
+var toWrite = data.secondsLeft + " seconds left to vote";
+document.getElementById("gameTimeLeft").textContent = (toWrite);
 }else{
-document.getElementById("chats").innerHTML += ('<div id="secondsLeft" style="text-align: center" class="red">'+  data + ' seconds left to vote.</div>');
+if(document.getElementById("secondsLeft")){
+document.getElementById("secondsLeft").innerHTML = ('<div id="secondsLeft" style="text-align: center" class="red">'+  data.secondsLeft + ' seconds left to vote.</div>');
+}else{
+document.getElementById("chats").innerHTML += ('<div id="secondsLeft" style="text-align: center" class="red">'+  data.secondsLeft + ' seconds left to vote.</div>');
+}
+}
 }
 });
 socket.on('lobby', data => {
-$('#chats').html('<div style="text-align: center" class="red">Current players: ' + data + '<br>waiting for more.</div>');
+  if(data.game == game){
+    if(!document.getElementById("gameCode")){
+    $('#newRoundStartLabel').html('<span id="gameCode">Start a new Round once everyone is in.<br>Game Code: ' + game + '</span>');
+  }
+    if(!document.getElementById("theLobbyer")){
+$('#chats').html('<div style="text-align: center" id="theLobbyer" class="red">Current players: ' + data.have + '<br>waiting for more.<br>' + secondsLeft + ' seconds remaining</div>');
 lobbySong.currentTime = 0;
 gameSong.pause();
 voteSong.pause();
 lobbySong.play();
+    }else{
+    $('#chats').html('<div style="text-align: center" id="theLobbyer" class="red">Current players: ' + data.have + '<br>waiting for more.<br>' + secondsLeft + ' seconds remaining</div>');
+    }
+    if(playersHave.length != data.have.length){
+      lobbySong.currentTime = 0;
+gameSong.pause();
+voteSong.pause();
+lobbySong.play();
+playersHave = data.have;
+    }
+  if(monitoring){
+var toWrite = "currently in the lobby: " + data.have;
+document.getElementById("waitingOn").textContent = (toWrite);
+}
+  }
 });
 socket.on('quest', data => {
-  newQuestFinal = data;
+for(d in data){
+if(data.game == game){
+  newQuestFinal = data.quest;
   changeQuestion();
+
+   if(monitoring){
+var toWrite = "question: " + newQuestFinal;
+document.getElementById("questionsMonitor").textContent = (toWrite);
+}
+}
+}
 });
 socket.on('afk', data => {
   afk = true;
@@ -148,7 +293,11 @@ var question = document.getElementById('question');
 question.classList.add('fade')
 });
 socket.on('winner', data => {
-showWin(data);
+for(var we in data){
+if(data.game == game){
+showWin(data.roundWinner);
+}
+}
 });
 socket.on('clear', data => {
   var whatever = data;
@@ -191,13 +340,6 @@ $(document).on('click', '.name', function(e) {
 	e.preventDefault();
 	reply($(this).text());
 	$('#message').focus();
-});
-$(document).on('click', '.message-content', function(e) {
-	var $temp = $("<input>");
-  $("body").append($temp);
-  $temp.val($(this).text()).select();
-  document.execCommand("copy");
-  $temp.remove();
 });
 $(document).on('click', '.vote', function(e) {
   var idForChange = $(this).attr('id');
@@ -246,6 +388,12 @@ $('#name').keypress(e => {
 		rename();
 	}
 });
+$('#game').keypress(e => {
+	var code = e.keyCode || e.which;
+	if (code == 13) {
+		rename();
+	}
+});
 
 
 function newQuestion(){
@@ -259,6 +407,7 @@ const sleep = (milliseconds) => {
 
 function changeQuestion(){
   if(!afk){
+    lobbying = false;
       voteRound = false;
       document.getElementById("newQuestion").textContent = ("New Round");
       var question = document.getElementById('question');
@@ -288,11 +437,15 @@ while(div.firstChild){
 }
 
 function showWin(winner){
+  if(monitoring){
+  $('#monitor').fadeOut();
+  }
+
   var question = document.getElementById('question');
 
   $('#message').val('');
   
-  winner = "🎉congrats" + " " + winner + "🎉";//" + "🐢
+  winner = "🎉congrats" + " " + winner + "🎉";
   $("#world").addClass("open");
   $("#winner").addClass("open");
   $("#close").addClass("open");
@@ -304,8 +457,6 @@ $("#close").click(function() {
   	socket.emit('close', );
 });
 
-
-// Confetti
 (function() {
   var COLORS, Confetti, NUM_CONFETTI, PI_2, canvas, confetti, context, drawCircle, i, range, resizeWindow, xpos;
 

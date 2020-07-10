@@ -21,14 +21,44 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+  <div id="monitor">
+  <button id = "backButton" style = "float: left;" onClick="closeMonitor();">Home</button>
+    <div id="monitorTitle">
+    Enter a Game To Watch
+    </div>
+    <div id = "monitorControls">
+    <input id="monitorGame" placeholder="Game To Watch..."autocomplete="off"/>
+    <button id="monitorButton" onclick="monitorGameSet()" >Watch</button>
+    </div>
+    <div class = "monitorText" id="questionsMonitor"></div>
+    <div class = "monitorText" id="answersMonitor"></div>
+    <div id="monitorFooter">
+    <div class = "monitorText" id="gameTimeLeft"> seconds remaining</div>
+        <div class = "monitorText" style = "" id="waitingOn">waiting on:</div>
+    </div>
+  </div>
+
+  <div id="menu">
+    <h3 id = "menuHeader">Help</h3>
+    <p id = "rules" style="color:black;padding:2vw;padding-top:1vh;margin-top:0vh;">1. leave game code blank for default game room.<br> 2. Type in whatever to create a new room. <br>3. Scoreboards are not necessary but are nice to have.<br>4. Click <button id = "tipsButton" onClick="monitor();">here</button> to use this device as a scoreboard <br>5. Find more of my projcts as well as code for this one at <a href="https://nayansmuek.com/">nayansmuek.com</a></p>
+    <button id="menButton" onclick="closeMenu()">Home</button>
+    <button id = "menButton" onClick="monitor();">Monitor</button> 
+  </div>
+        
+        <button id = "menuButton" style = "float: right;" onClick="openMenu();">Menu/Help</button>
+
     <div id="prompt">
+      <div id="game-info">
+        <span id = "promptText">Game Code:<br/></span>
+        <input id="game" autocomplete="off" style="margin-bottom: 12px;"/>
+      </div>
       <div id="name-info">
         Your Name:<br/>
         <input id="name" autocomplete="off" style="margin-bottom: 12px;"/>
       </div>
-      <button onclick="rename()">OK</button>
+      <button id="promptButton" onclick="rename()">OK</button>
     </div>
-
     <div id="afk">
       <div id="inactive">You have been kicked for inactivity<br/></div>
       <button onClick="window.location.reload();">Rejoin</button>
@@ -37,7 +67,7 @@
     <div id="main-container">
       <div id="main-label" id="questionBox">
         <h1 class="label" id="question">
-          <span>Start a new Round once everyone is in</span>
+          <span id="newRoundStartLabel">Start a new Round once everyone is in</span>
           </h1>
       </div>
       <div id="main-content">
@@ -51,7 +81,6 @@
         </div>
       </div>
     </div>
-    <div id="copy-tooltip" class="tooltip">Copy</div>
     <script src="main.js"></script>
   </body>
 </html>
