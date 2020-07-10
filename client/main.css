@@ -49,9 +49,9 @@ html, body{
   }
   
 }
-@media (max-width: 343px){
+@media (max-width: 312px){
   #main-container{
-    width: 328px;
+    width: 312px;
   }
 }
 .label{
@@ -264,13 +264,17 @@ button{
   margin-bottom: 10px;
 }
 .controlButton{
-  font: 5.2vmax roboto;
+  /* font: 5.2vmax roboto; */
+  font: 8vmin roboto;
   float: left;
+  height: 8vh;
 }
 .controlButton2{
-  font: 5.2vmax roboto;
+  font: 8vmin roboto;
   float: right;
   margin-right: 4vw;
+  width: 67vw;
+  height: 8vh;
 }
 #message{
   width: 92vw;
@@ -332,7 +336,17 @@ button{
 #rules{
     margin-top:1vh;
     margin-bottom:1vh;
-    font-size:4vmax;
+    font-size:3.6vh;
+    padding:2vw;
+}
+@media only screen and (-webkit-min-device-pixel-ratio: 3) {
+#rules{
+    font-size:3.4vh;
+  }
+}
+#newQuestion{
+  display:inline-block;
+  font-size: auto;
 }
 @media only screen and (min-width: 768px) and (orientation: landscape){
   input{
@@ -358,16 +372,21 @@ button{
     width: 100vw;
   }
   #rules{
-    font-size:3.6vmax;
+    font-size:6.7vmin;
+    padding:0vw;
 }
   .controlButton{
-    font: 3vmax roboto;
+    font: 2.6vmax roboto;
     padding: 1vw;
+      height: 8vh;
     }
   .controlButton2{
-    font: 3vmax roboto;
+    font: 2.6vmax roboto;
         padding: 1vw;
         margin-right: 1vw;
+        width: auto;
+          height: 8vh;
+        
 }
 #message{
   width: 98vw;
@@ -388,7 +407,8 @@ button{
      margin-top: 2vh;
   }
     #menButton{
-     margin-top: 2vh;
+     margin-top: 0vh;
+     padding:1vw;
   }
   #tips{
         font-size: 2vmax;

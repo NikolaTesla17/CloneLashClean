@@ -500,7 +500,7 @@ function newRoundCheck(i){
     rooms[games.indexOf(socketList[i].game)].haveAnswers = 0;
   }else{
     toSend=({
-      message:rooms[games.indexOf(socketList[i].game)].roundVote + "/" + rooms[games.indexOf(socketList[i].game)].gameFrequency + " votes",
+      message:"New Round (" + rooms[games.indexOf(socketList[i].game)].roundVote + "/" + rooms[games.indexOf(socketList[i].game)].gameFrequency + ")",
       game:socketList[i].game
     })
      
