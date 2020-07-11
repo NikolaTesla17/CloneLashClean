@@ -34,7 +34,6 @@ function monitor(){
 }
 
 function closeMonitor(){
-  	$('#name-info').fadeOut(500);
     $('#monitor').fadeOut(500);
   sleep(500).then(() => {
     $('#name-info').show();
