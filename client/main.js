@@ -19,6 +19,7 @@ var voteRound = false;
 var playersHave = [];
 var monitoring = false;
 var lobbying = true;
+var firstTime = true;
 
 var time;
 var newQuestFinal;
@@ -456,6 +457,7 @@ $("#close").click(function() {
   	socket.emit('close', );
 });
 
+if(firstTime){
 (function() {
   var COLORS, Confetti, NUM_CONFETTI, PI_2, canvas, confetti, context, drawCircle, i, range, resizeWindow, xpos;
 
@@ -525,6 +527,8 @@ $("#close").click(function() {
       this.y = range(-20, h - this.r2);
       this.xmax = w - this.r;
       this.ymax = h - this.r;
+      this.vx=0;
+      this.vy=0;
       this.vx = range(0, 2) + 8 * xpos - 5;
       return this.vy = 0.7 * this.r + range(-1, 1);
     }
@@ -573,4 +577,6 @@ $("#close").click(function() {
   step();
 
 }).call(this);
+}
+firstTime = false;
 }
